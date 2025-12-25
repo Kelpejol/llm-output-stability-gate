@@ -1,7 +1,7 @@
-uqlm
-fastapi
-uvicorn
-pydantic
-langchain
-openai
-python-dotenv
+uqlm==0.1.0
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+langchain==0.0.335
+openai==1.3.5
+python-dotenv==1.0.0
