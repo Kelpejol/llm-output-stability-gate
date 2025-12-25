@@ -1,140 +1,218 @@
-# LLM Output Stability Gate (UQLM)
+# 🛡️ LLM Output Stability Gate (UQLM)
 
-A pre-execution reliability gate for LLM systems that
-quantifies output uncertainty using UQLM and enforces
-explicit confidence thresholds.
 
-This project focuses on **output stability**, not prompt
-rewriting or response filtering.
+A pre-execution reliability gate for LLM systems that quantifies output uncertainty using UQLM and enforces explicit confidence thresholds.
 
----
+## 🎯 Why This Exists
 
-## Motivation
-
-Many failures in LLM-powered systems do not stem from model
-incapability, but from **unstable or low-confidence outputs**.
+LLM failures often stem from **unstable or low-confidence outputs**, not model incapability.
 
 Given the same prompt, an LLM may:
-- produce contradictory answers
-- hallucinate details inconsistently
-- vary significantly across generations
+- Produce contradictory answers
+- Hallucinate inconsistently  
+- Vary significantly across generations
 
-Blindly trusting such outputs propagates risk into agents,
-tools, and automation pipelines.
+This project uses **uncertainty quantification** as a **control gate** before LLM outputs are accepted.
 
-This project demonstrates how **uncertainty quantification**
-can be used as a **control gate** before LLM outputs are
-accepted or acted upon.
+## ✨ Features
 
----
+- 🔍 **Multi-sample uncertainty quantification** using UQLM
+- 🎯 **Confidence scoring** between 0 and 1
+- 🚦 **Configurable thresholds** for acceptance/rejection
+- ⚡ **Fast API** for integration
+- 🐳 **Docker ready**
+- 🧪 **Well tested**
 
-## What This Project Does
+## 🚀 Quick Start
 
-1. Generates multiple candidate responses for a prompt
-2. Quantifies agreement using UQLM (BlackBox uncertainty)
-3. Produces a confidence score between 0 and 1
-4. Enforces a configurable acceptance threshold
-5. Explicitly rejects unstable outputs
-
----
-
-## What This Project Does NOT Do
-
-- It does not execute downstream actions
-- It does not rewrite or sanitize prompts
-- It does not guarantee correctness
-- It does not fine-tune models
-
-This is a **reliability primitive**, not an agent framework.
-
----
-
-## Architecture
-
-Prompt
-↓
-Multiple Generations
-↓
-UQLM Uncertainty Scoring
-↓
-Policy Enforcement
-↓
-Accept / Reject
-
-
----
-
-## Why UQLM
-
-UQLM provides principled uncertainty estimates by measuring
-semantic agreement across multiple LLM outputs using
-information-theoretic metrics.
-
-This approach is more robust than:
-- single-response heuristics
-- regex or keyword filters
-- length-based checks
-
----
-
-## Running the Service
+### Installation
 
 ```bash
-export OPENAI_API_KEY=your_key
+# Clone the repo
+git clone https://github.com/kelpejol/llm-output-stability-gate.git
+cd llm-output-stability-gate
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Set your OpenAI API key
+export OPENAI_API_KEY=your_key_here
+
+# Run the server
 uvicorn gate.main:app --reload
+```
 
+### Docker
 
-POST /evaluate:
+```bash
+docker-compose up -d
+```
 
-{
-  "prompt": "Explain Paxos in simple terms",
-  "min_confidence": 0.7,
-  "num_samples": 5
-}
+### First API Call
 
-Example Output
+```bash
+curl -X POST http://localhost:8000/evaluate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Explain Paxos in simple terms",
+    "min_confidence": 0.7,
+    "num_samples": 5
+  }'
+```
+
+**Response:**
+```json
 {
   "confidence_score": 0.73,
   "passed": true
 }
+```
 
+## 📖 API Documentation
 
-or
+### POST `/evaluate`
 
+Evaluate prompt stability and confidence.
+
+**Request:**
+```json
+{
+  "prompt": "string",
+  "min_confidence": 0.6,
+  "num_samples": 5
+}
+```
+
+**Response (Pass):**
+```json
+{
+  "confidence_score": 0.75,
+  "passed": true
+}
+```
+
+**Response (Fail):**
+```json
 {
   "confidence_score": 0.42,
   "passed": false,
-  "reason": "Output confidence 0.42 is below required threshold 0.70"
+  "reason": "Output confidence 0.42 is below required threshold 0.60"
 }
+```
 
-Use Cases
+**Interactive Docs:** Visit `http://localhost:8000/docs` after starting the server.
 
-Agent execution gating
+## 🏗️ Architecture
 
-Tool invocation safety
+```
+Prompt
+  ↓
+Multiple Generations (5x)
+  ↓
+UQLM Uncertainty Scoring
+  ↓
+Policy Enforcement (threshold check)
+  ↓
+Accept / Reject
+```
 
-Autonomous workflows
+### Design Principles
 
-Trust-aware LLM pipelines
+- **Fail fast** - Invalid outputs rejected immediately
+- **Explicit trust decisions** - No silent acceptance
+- **Model-agnostic** - Works with any LLM backend
+- **Separation of concerns** - Scoring separate from policy
 
-Infrastructure automation
+## 🧪 Testing
 
-Future Work
+```bash
+# Run tests
+pytest
 
-White-box uncertainty scoring
+# With coverage
+pytest --cov=gate
 
-Batch and streaming evaluation
+# Specific test file
+pytest tests/test_api.py
+```
 
-Drift detection over time
+## 🛠️ Development
 
-Policy composition
+```bash
+# Install dev dependencies
+pip install -r requirements-dev.txt
 
-Model-agnostic backends
+# Format code
+black gate/ tests/
 
-Human-in-the-loop escalation
+# Run linter
+ruff check gate/
+```
 
-Status
+## 📦 Deployment
 
-This project is intentionally minimal and focused on
-correctness, composability, and explicit trust boundaries.
+### Environment Variables
+
+```bash
+OPENAI_API_KEY=your_key
+HOST=0.0.0.0
+PORT=8000
+LOG_LEVEL=INFO
+```
+
+See `.env.example` for all options.
+
+## 🎯 Use Cases
+
+- **Agent execution gating** - Verify output before action
+- **Tool invocation safety** - Check confidence before API calls
+- **Autonomous workflows** - Add reliability checkpoints
+- **Trust-aware pipelines** - Route based on confidence
+- **Infrastructure automation** - Prevent low-confidence changes
+
+## 📊 How UQLM Works
+
+UQLM measures semantic agreement across multiple LLM outputs using information-theoretic metrics.
+
+**More robust than:**
+- Single-response heuristics
+- Regex or keyword filters
+- Length-based checks
+
+**References:**
+- [UQLM Paper](https://arxiv.org/abs/2305.19187)
+- [UQLM GitHub](https://github.com/zlin7/UQ-NLG)
+
+## 🤝 Contributing
+
+Contributions are welcome! Please check out [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feature/amazing`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing`)
+5. Open a Pull Request
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [UQLM](https://github.com/zlin7/UQ-NLG) for uncertainty quantification
+- [FastAPI](https://fastapi.tiangolo.com/) for the framework
+- [LangChain](https://www.langchain.com/) for LLM orchestration
+
+## 📞 Support
+
+- 🐛 [Report Issues](https://github.com/kelpejol/llm-output-stability-gate/issues)
+- 💬 [Discussions](https://github.com/kelpejol/llm-output-stability-gate/discussions)
+
+## 🔮 Future Work
+
+- White-box uncertainty scoring
+- Batch and streaming evaluation
+- Drift detection over time
+- Policy composition
+- Model-agnostic backends
+- Human-in-the-loop escalation
