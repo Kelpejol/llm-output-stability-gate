@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  gate:
+    build: .
+    container_name: llm-stability-gate
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - HOST=0.0.0.0
+      - PORT=8000
+      - LOG_LEVEL=INFO
+      - OPENAI_MODEL=gpt-4o-mini
+      - DEFAULT_NUM_SAMPLES=5
+      - DEFAULT_MIN_CONFIDENCE=0.6
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - gate-network
+
+networks:
+  gate-network:
+    driver: bridge
