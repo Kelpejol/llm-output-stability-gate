@@ -454,8 +454,6 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 - 🐛 **Issues:** [github.com/kelpejol/uqlm-guard/issues](https://github.com/kelpejol/uqlm-guard/issues)
 - 💬 **Discussions:** [github.com/kelpejol/uqlm-guard/discussions](https://github.com/kelpejol/uqlm-guard/discussions)
-- 📧 **Email:** kelpejol@example.com
-
 ---
 
 <div align="center">
