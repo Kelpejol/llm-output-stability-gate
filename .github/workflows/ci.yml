@@ -25,8 +25,9 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements*.txt') }}
         restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
           ${{ runner.os }}-pip-
 
     - name: Install dependencies
@@ -36,21 +37,22 @@ jobs:
         pip install -r requirements-dev.txt
         pip install -e .
 
-    - name: Run tests
+    - name: Run tests (without API key)
       run: |
         pytest -v -m "not requires_api_key"
 
     - name: Run tests with coverage
       if: matrix.python-version == '3.11'
       run: |
-        pytest --cov=gate --cov-report=xml --cov-report=term -m "not requires_api_key"
+        pytest --cov=uqlm_guard --cov-report=xml --cov-report=term -m "not requires_api_key"
 
-    - name: Upload coverage
+    - name: Upload coverage to Codecov
       if: matrix.python-version == '3.11'
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage.xml
         fail_ci_if_error: false
+        verbose: true
 
   lint:
     runs-on: ubuntu-latest
@@ -63,13 +65,59 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Install dependencies
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-lint-${{ hashFiles('**/requirements-dev.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-lint-
+
+    - name: Install linting tools
       run: |
         python -m pip install --upgrade pip
-        pip install black ruff
+        pip install black ruff mypy
 
     - name: Run black
-      run: black --check gate/ tests/ || echo "Black formatting needed - run 'black gate/ tests/' locally"
+      run: |
+        black --check uqlm_guard/ tests/ examples/ benchmarks/
 
     - name: Run ruff
-      run: ruff check gate/ tests/ || echo "Ruff linting needed - run 'ruff check gate/ tests/ --fix' locally"
+      run: |
+        ruff check uqlm_guard/ tests/ examples/ benchmarks/
+
+    - name: Run mypy
+      run: |
+        mypy uqlm_guard/
+      continue-on-error: true
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install build tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+
+    - name: Build package
+      run: |
+        python -m build
+
+    - name: Check package
+      run: |
+        twine check dist/*
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: dist-packages
+        path: dist/
