@@ -1,0 +1,37 @@
+{
+  "security": [
+    "Implement JWT token authentication middleware",
+    "Write a password hashing function",
+    "Create a secure session management system",
+    "Implement OAuth2 authorization flow",
+    "Write SQL injection prevention middleware"
+  ],
+  "algorithms": [
+    "Implement a binary search tree with balancing",
+    "Write a consistent hashing algorithm",
+    "Create a distributed rate limiter",
+    "Implement the Raft consensus algorithm",
+    "Write a load balancer with health checks"
+  ],
+  "data_structures": [
+    "Implement an LRU cache",
+    "Create a thread-safe queue",
+    "Write a trie for autocomplete",
+    "Implement a bloom filter",
+    "Create a skip list"
+  ],
+  "simple": [
+    "Write a function to reverse a string",
+    "Create a function to check if a number is prime",
+    "Implement binary search in a sorted array",
+    "Write a function to find the factorial of a number",
+    "Create a function to check for palindromes"
+  ],
+  "edge_cases": [
+    "Handle timezone conversion in date calculations",
+    "Implement floating point comparison with tolerance",
+    "Write Unicode string normalization",
+    "Handle race conditions in concurrent updates",
+    "Implement retry logic with exponential backoff"
+  ]
+}
